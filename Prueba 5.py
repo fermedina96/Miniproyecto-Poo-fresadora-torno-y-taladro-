@@ -534,23 +534,20 @@ class AppGUI:
     def _handle_alerts_pausing(self, alerts):
         # Visual mark and popup, asks user to repair now
         # Mark visuals for affected machines
-        for a in alerts:
-            name = a["maquina"]; primary = a.get("primary_var","")
-            idx = next((i for i,m in enumerate(self.system.machines) if m.name==name), None)
-            if idx is None: continue
-            # color offending line red
-            for key,line in [("temperature", self.lines[idx]["temp"]), ("torque", self.lines[idx]["torque"]),
-                             ("vibration", self.lines[idx]["vib"]), ("power", self.lines[idx]["power"]),
-                             ("rpm", self.lines[idx]["rpm"])]:
-                if key == primary:
-                    try: line.set_color("red"); line.set_linewidth(2.4)
-                    except: pass
-                else:
-                    try: line.set_color(MACHINE_COLORS[idx]); line.set_linewidth(0.9)
-                    except: pass
-            # prefix tab
-            try: self.notebook.tab(idx, text="⚠ " + self.system.machines[idx].name)
-            except: pass
+               # --- Modo "alerta destacada" ---
+        for j in range(len(self.system.machines)):
+            if j != idx:
+                self.notebook.tab(j, state="disabled")
+                for ax in self.axes[j]:
+                    ax.set_facecolor("#dddddd")  # Fondo gris tenue
+            else:
+                for ax in self.axes[j]:
+                    ax.set_facecolor("#ffcccc")  # Fondo rojo suave
+                    ax.text(0.5, 0.5, "⚠️ FALLA DETECTADA ⚠️",
+                            fontsize=22, color="red", ha="center", va="center",
+                            transform=ax.transAxes, fontweight="bold")
+                self.canvases[j].draw_idle()
+
 
         # append to global alerts panel
         self.text_alerts.config(state="normal")
